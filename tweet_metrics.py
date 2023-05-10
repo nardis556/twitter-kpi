@@ -238,11 +238,13 @@ def main():
                             replied_to_user = users.get(
                                 replied_to_user_id, None)
                     # print(tweet['public_metrics']']
+                    # print(tweet_author)
                     metrics = tweet['public_metrics']
                     likes = metrics['like_count']
                     retweets = metrics['retweet_count']
                     replies = metrics['reply_count']
                     quotes = metrics['quote_count']
+                    impressions = metrics['impression_count']
                     if query_type == SEARCH_MENTIONS_QUERY:
                         if text.startswith('RT @'):
                             continue
@@ -252,6 +254,8 @@ def main():
                         tweet_type = 'retweet'
                     elif text.startswith('@'):
                         tweet_type = 'reply'
+                    # elif quoted_id and tweet_author == QUERY:
+                    #     tweet_type = 'reply'
                     else:
                         tweet_type = 'original'
                     existing_tweet = is_tweet_in_db(
@@ -263,11 +267,20 @@ def main():
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         '''
                         values = (
-                            tweet_id, tweet_type, tweet_author, text,
-                            likes, retweets, replies, quotes,
-                            metrics['impression_count'],
+                            tweet_id, 
+                            tweet_type, 
+                            tweet_author, 
+                            text,
+                            likes, 
+                            retweets, 
+                            replies, 
+                            quotes,
+                            impressions,
                             tweet_timestamp,
-                            replied_to_id, quoted_id, replied_to_user, retweeted_id
+                            replied_to_id, 
+                            quoted_id, 
+                            replied_to_user, 
+                            retweeted_id
                         )
                         cursor.execute(query, values)
                         db.commit()
