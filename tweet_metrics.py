@@ -119,11 +119,7 @@ def is_tweet_in_db(tweet_id, message, query_type):
 def update_old_tweets():
     # print("Executing update_old_tweets()")
     now = datetime.datetime.now()
-    update_intervals = [
-        (6, 12, 1),
-        (12, 24, 2),
-        (24, 48, 3),
-    ]
+    update_intervals = config.SEARCH_UPDATE_INTERVAL
     for start_hours, end_hours, updated_value in update_intervals:
         start_time = now - datetime.timedelta(hours=end_hours)
         end_time = now - datetime.timedelta(hours=start_hours)
@@ -332,3 +328,4 @@ finally:
     # stop spinner
     stop_spinner(signal)
     spinner.join()
+
