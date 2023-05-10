@@ -8,13 +8,13 @@ else
     /home/$USER/.pyenv/shims/python /home/$USER/twitter-kpi/build_followers.py &
 fi
 
-if pgrep -f "new_followers.py" > /dev/null
-then
-    echo "new_followers.py is running."
-else
-    echo "new_followers.py is not running. Starting new_followers.py"
-    /home/$USER/.pyenv/shims/python /home/$USER/twitter-kpi/new_followers.py &
-fi
+# if pgrep -f "new_followers.py" > /dev/null
+# then
+#     echo "new_followers.py is running."
+# else
+#     echo "new_followers.py is not running. Starting new_followers.py"
+#     /home/$USER/.pyenv/shims/python /home/$USER/twitter-kpi/new_followers.py &
+# fi
 
 if /home/$USER/.pyenv/shims/python -f "tweet_metrics.py" > /dev/null
 then
