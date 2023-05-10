@@ -254,8 +254,14 @@ def main():
                         tweet_type = 'retweet'
                     elif text.startswith('@'):
                         tweet_type = 'reply'
+                    ### this line includes quote tweets (us quoting tweet to someone as a reply instead of original)
+                    ### since quote tweets gets included in the users main profile and gets a lot of metrics from there, unlike normal replies which has its own column
+                    ### uncomment if want to set queried author as a "reply"
+                    
                     # elif quoted_id and tweet_author == QUERY:
                     #     tweet_type = 'reply'
+                    
+                    
                     else:
                         tweet_type = 'original'
                     existing_tweet = is_tweet_in_db(
