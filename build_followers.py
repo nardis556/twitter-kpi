@@ -1,8 +1,9 @@
 import requests
-from time import sleep
+from time import sleep, time
 import mysql.connector
 from datetime import datetime
 import config
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 BEARER_TOKEN = config.BEARER_TOKEN
 TWITTER_USER_ID = config.TWITTER_USER_ID
@@ -26,42 +27,26 @@ db = mysql.connector.connect(
 cursor = db.cursor()
 
 
-def get_user_follower_count():
-    url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}"
+def prepare_request_data(pagination_token=None, max_results=None, user_fields='public_metrics'):
     headers = {
         'Authorization': f'Bearer {BEARER_TOKEN}',
     }
     params = {
-        'user.fields': 'public_metrics'
+        'user.fields': user_fields,
     }
-    while True:
-        try:
-            response = requests.get(url, headers=headers, params=params)
-            if response.status_code == 200:
-                # print(response.json()['data']['public_metrics']['followers_count'])
-                return response.json()['data']['public_metrics']['followers_count']
-            else:
-                if response.status_code == 429:
-                    print('rate limited')
-                    sleep(5 * 60) 
-                    continue
-                else:
-                    print(f"Request returned an error: {response.status_code}, {response.text}")
-                    return None
-        except Exception as e:
-            print(f"Exception: {e}")
-            return None
+    if pagination_token:
+        params['pagination_token'] = pagination_token
+    if max_results:
+        params['max_results'] = max_results
+    
+    return headers, params
 
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def get_all_followers(last_pagination_token):
+    print('get_all_followers')
     url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}/followers"
-    headers = {
-        'Authorization': f'Bearer {BEARER_TOKEN}',
-    }
-    params = {
-        'user.fields': 'public_metrics',
-        'max_results': 50,
-        'pagination_token': last_pagination_token
-    }
+    headers, params = prepare_request_data(last_pagination_token, 50)
     
     all_followers = []
     while True:
@@ -70,8 +55,14 @@ def get_all_followers(last_pagination_token):
             if response.status_code != 200:
                 print(f"Request returned an error: {response.status_code}, {response.text}")
                 if response.status_code == 429:
-                    print("rate limited")
-                    sleep(5 * 60)
+                    # print(int(response.headers.get('x-rate-limit-remaining', 0)))
+                    # print(int(response.headers.get('x-rate-limit-reset', 0)))
+#                     print("rate limited")
+                    rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
+                    rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
+                    if rate_limit_remaining == 0:
+                        sleep_time = rate_limit_reset - time() + 5
+                        sleep(sleep_time)
                     continue
                 else:
                     break
@@ -86,12 +77,40 @@ def get_all_followers(last_pagination_token):
     return all_followers, params.get('pagination_token', None)
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+def get_user_follower_count():
+    print('get_user_follower_count')
+    url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}"
+    headers, params = prepare_request_data()
+    
+    while True:
+        try:
+            response = requests.get(url, headers=headers, params=params)
+            if response.status_code == 200:
+                return response.json()['data']['public_metrics']['followers_count']
+            else:
+                if response.status_code == 429:
+                    # print(int(response.headers.get('x-rate-limit-remaining', 0)))
+                    # print(int(response.headers.get('x-rate-limit-reset', 0)))
+                    # print('rate limited')
+                    rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
+                    rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
+                    if rate_limit_remaining == 0:
+                        sleep_time = rate_limit_reset - time() + 5 
+                        sleep(sleep_time)
+                    continue
+                else:
+                    print(f"Request returned an error: {response.status_code}, {response.text}")
+                    return None
+        except Exception as e:
+            print(f"Exception: {e}")
+            return None
+
 
 def get_last_pagination_token():
     select_query = "SELECT pagination_token FROM followers ORDER BY timestamp DESC LIMIT 1"
     cursor.execute(select_query)
     result = cursor.fetchone()
-    # print(result)
     return result[0] if result else None
 
 
@@ -110,18 +129,19 @@ def save_follower_info(follower, user_followers_count, pagination_token):
         db.commit()
 
 
-def track_followers():
+def main():
+    count = 0
+    print(count++1)
     last_pagination_token = get_last_pagination_token()
     all_followers, next_pagination_token = get_all_followers(last_pagination_token)
     user_followers_count = get_user_follower_count()
     for follower in all_followers:
-        # print(follower)
         save_follower_info(follower, user_followers_count, next_pagination_token)
 
 
 while True:
     try:
-        track_followers()
+        main()
         sleep(FREQUENCY * 60)
     except Exception as e:
         print(f"Exception: {e}")
