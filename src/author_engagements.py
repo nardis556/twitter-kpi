@@ -27,7 +27,7 @@ def start_of_month(dt):
 
 def update_engagement_summaries(interval):
     for tweet_type in ['original', 'reply', 'retweets']:
-        cursor.execute(f"SELECT MAX(date) FROM author_{interval}_engagements")
+        cursor.execute(f"SELECT MAX(date) FROM author_{interval}_engagements_summaries")
         start_date = cursor.fetchone()[0]
         if start_date is None:
             cursor.execute(f"SELECT MIN(timestamp) FROM twitter WHERE tweet_type = '{tweet_type}'")
@@ -48,7 +48,7 @@ def update_engagement_summaries(interval):
         print(tweet_type, start_date, end_date)
 
         query = f"""
-            INSERT INTO author_{interval}_engagements (date, engagements) 
+            INSERT INTO author_{interval}_engagements_summaries (date, engagements) 
             SELECT 
                 {group_by_clause},
                 SUM(likes + impressions + retweets + replies + quotes) AS engagements
@@ -69,7 +69,7 @@ while True:
     update_engagement_summaries('daily')
     update_engagement_summaries('weekly')
     update_engagement_summaries('monthly')
-    time.sleep(360)
+    time.sleep(3600)
   except Exception as e:
     traceback.print_exc()
     pass
