@@ -4,6 +4,9 @@ import mysql.connector
 from datetime import datetime
 import config
 from tenacity import retry, stop_after_attempt, wait_fixed
+import threading
+import itertools
+import sys
 
 BEARER_TOKEN = config.BEARER_TOKEN
 TWITTER_USER_ID = config.TWITTER_USER_ID
@@ -44,20 +47,20 @@ def prepare_request_data(pagination_token=None, max_results=None, user_fields='p
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def get_all_followers(last_pagination_token):
-    print('get_all_followers')
+    # print('get_all_followers')
     url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}/followers"
-    headers, params = prepare_request_data(last_pagination_token, 50)
+    headers, params = prepare_request_data(last_pagination_token, config.RETURNED_FOLLOWERS_COUNT)
     
     all_followers = []
     while True:
         try:
             response = requests.get(url, headers=headers, params=params)
             if response.status_code != 200:
-                print(f"Request returned an error: {response.status_code}, {response.text}")
+                # print(f"Request returned an error: {response.status_code}, {response.text}")
                 if response.status_code == 429:
                     # print(int(response.headers.get('x-rate-limit-remaining', 0)))
                     # print(int(response.headers.get('x-rate-limit-reset', 0)))
-                    print("rate limited")
+                    # print("rate limited")
                     rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
                     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
                     if rate_limit_remaining == 0:
@@ -79,7 +82,7 @@ def get_all_followers(last_pagination_token):
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def get_user_follower_count():
-    print('get_user_follower_count')
+    # print('get_user_follower_count')
     url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}"
     headers, params = prepare_request_data()
     
@@ -92,7 +95,7 @@ def get_user_follower_count():
                 if response.status_code == 429:
                     # print(int(response.headers.get('x-rate-limit-remaining', 0)))
                     # print(int(response.headers.get('x-rate-limit-reset', 0)))
-                    print('rate limited')
+                    # print('rate limited')
                     rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
                     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
                     if rate_limit_remaining == 0:
@@ -100,7 +103,7 @@ def get_user_follower_count():
                         sleep(sleep_time)
                     continue
                 else:
-                    print(f"Request returned an error: {response.status_code}, {response.text}")
+                    # print(f"Request returned an error: {response.status_code}, {response.text}")
                     return None
         except Exception as e:
             print(f"Exception: {e}")
@@ -140,10 +143,50 @@ def main():
         save_follower_info(follower, user_followers_count, next_pagination_token)
 
 
-while True:
-    try:
+# while True:
+#     try:
+#         main()
+#         sleep(FREQUENCY * 60)
+#     except Exception as e:
+#         print(f"Exception: {e}")
+#         pass
+
+class Signal:
+    go = True
+
+
+def spin(msg, signal):
+    write, flush = sys.stdout.write, sys.stdout.flush
+    for char in itertools.cycle('|/-\\'):
+        status = char + ' ' + msg
+        write(status)
+        flush()
+        write('\b' * len(status))
+        sleep(.1)
+        if not signal.go:
+            break
+    write(' ' * len(status) + '\b' * len(status))
+
+
+def stop_spinner(signal):
+    signal.go = False
+
+sleep(2)
+
+signal = Signal()
+spinner = threading.Thread(target=spin, args=("TWEET SEARCHER RUNNING...", signal))
+spinner.start()
+
+
+try:
+    while True:
         main()
         sleep(FREQUENCY * 60)
-    except Exception as e:
-        print(f"Exception: {e}")
-        pass
+except Exception as e:
+    # traceback.print_exc()
+    pass
+finally:
+    # stop spinner
+    stop_spinner(signal)
+    spinner.join()
+
