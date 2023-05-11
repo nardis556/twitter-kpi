@@ -31,3 +31,12 @@ else
     echo "update_summaries.py is not running. Starting update_summaries.py"
     /home/$USER/.pyenv/shims/python /home/$USER/twitter-kpi/src/update_summaries.py &
 fi
+
+if pgrep -f "author_engagements.py" > /dev/null
+then
+    echo "author_engagements.py is running."
+else
+    echo "author_engagements.py is not running. Starting author_engagements.py"
+    /home/$USER/.pyenv/shims/python /home/$USER/twitter-kpi/src/author_engagements.py &
+fi
+
