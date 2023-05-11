@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
 from dateutil.relativedelta import relativedelta
 import mysql.connector
 import config
-import time
+from time import sleep
 import traceback
 
 MYSQL_HOST = config.MYSQL_HOST
@@ -30,10 +30,12 @@ def update_engagement_summaries(interval):
         cursor.execute(f"SELECT MAX(date) FROM author_{interval}_engagements_summaries")
         start_date = cursor.fetchone()[0]
         if start_date is None:
-            cursor.execute(f"SELECT MIN(timestamp) FROM twitter WHERE tweet_type = '{tweet_type}'")
+            cursor.execute(f"SELECT MIN(DATE(timestamp)) FROM twitter WHERE tweet_type = '{tweet_type}'")
             start_date = cursor.fetchone()[0]
         else:
             start_date = start_date + relativedelta(days=1)
+
+        start_date = datetime.combine(start_date, time.min)  # Start from 00:00
 
         end_date = datetime.now()
         if interval == 'daily':
@@ -64,12 +66,13 @@ def update_engagement_summaries(interval):
         cursor.execute(query)
         db.commit()
 
+
 while True:
   try:
     update_engagement_summaries('daily')
     update_engagement_summaries('weekly')
     update_engagement_summaries('monthly')
-    time.sleep(3600)
+    sleep(360)
   except Exception as e:
     traceback.print_exc()
     pass
