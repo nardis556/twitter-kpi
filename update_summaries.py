@@ -5,7 +5,6 @@ import config
 import time
 import traceback
 
-
 MYSQL_HOST = config.MYSQL_HOST
 MYSQL_USER = config.MYSQL_USER
 MYSQL_PASSWORD = config.MYSQL_PASSWORD
@@ -28,21 +27,28 @@ def start_of_month(dt):
 
 def update_summaries(interval):
     for tweet_type in ['original', 'retweet', 'reply', 'mentions']:
+        cursor.execute(f"SELECT MAX(date) FROM summary_{tweet_type}_{interval}")
+        start_date = cursor.fetchone()[0]
+        if start_date is None:
+            cursor.execute(f"SELECT MIN(timestamp) FROM twitter WHERE tweet_type = '{tweet_type}'")
+            start_date = cursor.fetchone()[0]
+        else:
+            start_date = start_date + relativedelta(days=1)
+
         end_date = datetime.now()
         if interval == 'daily':
-            start_date = end_date - relativedelta(days=1)
             group_by_clause = "DATE(timestamp)"
         elif interval == 'weekly':
-            start_date = end_date - relativedelta(weeks=1)
+            start_date = start_of_week(start_date)
             group_by_clause = "STR_TO_DATE(CONCAT(YEARWEEK(timestamp), ' Sunday'), '%X%V %W')"
         elif interval == 'monthly':
-            start_date = end_date - relativedelta(months=1)
+            start_date = start_of_month(start_date)
             group_by_clause = "DATE_FORMAT(timestamp, '%Y-%m-01')"
 
         print(tweet_type, start_date, end_date)
 
         query = f"""
-            INSERT INTO {interval}_summary_{tweet_type} (date, likes, retweets, replies, quotes, impressions)
+            INSERT INTO summary_{tweet_type}_{interval} (date, likes, retweets, replies, quotes, impressions)
             SELECT 
                 {group_by_clause},
                 SUM(likes), 
@@ -69,11 +75,11 @@ def update_summaries(interval):
 while True:
   try:
     update_summaries('daily')
-    time.sleep(60)
+    # time.sleep(60)
     update_summaries('weekly')
-    time.sleep(60)
+    # time.sleep(60)
     update_summaries('monthly')
-    time.sleep(21600)
+    time.sleep(360)
   except Exception as e:
     traceback.print_exc()
     pass
