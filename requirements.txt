@@ -1,3 +1,4 @@
 mysql-connector-python
 dateutil
 tenacity
+requests
