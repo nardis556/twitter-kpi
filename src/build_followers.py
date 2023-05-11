@@ -145,50 +145,50 @@ def main():
         save_follower_info(follower, user_followers_count, next_pagination_token)
 
 
-# while True:
-#     try:
-#         main()
-#         sleep(FREQUENCY * 60)
-#     except Exception as e:
-#         print(f"Exception: {e}")
-#         pass
-
-class Signal:
-    go = True
-
-
-def spin(msg, signal):
-    write, flush = sys.stdout.write, sys.stdout.flush
-    for char in itertools.cycle('|/-\\'):
-        status = char + ' ' + msg
-        write(status)
-        flush()
-        write('\b' * len(status))
-        sleep(.1)
-        if not signal.go:
-            break
-    write(' ' * len(status) + '\b' * len(status))
-
-
-def stop_spinner(signal):
-    signal.go = False
-
-sleep(2)
-
-signal = Signal()
-spinner = threading.Thread(target=spin, args=("BUILDING FOLLOWERS...", signal))
-spinner.start()
-
-
-try:
-    while True:
+while True:
+    try:
         main()
         sleep(FREQUENCY * 60)
-except Exception as e:
-    # traceback.print_exc()
-    pass
-finally:
-    # stop spinner
-    stop_spinner(signal)
-    spinner.join()
+    except Exception as e:
+        print(f"Exception: {e}")
+        pass
+
+# class Signal:
+#     go = True
+
+
+# def spin(msg, signal):
+#     write, flush = sys.stdout.write, sys.stdout.flush
+#     for char in itertools.cycle('|/-\\'):
+#         status = char + ' ' + msg
+#         write(status)
+#         flush()
+#         write('\b' * len(status))
+#         sleep(.1)
+#         if not signal.go:
+#             break
+#     write(' ' * len(status) + '\b' * len(status))
+
+
+# def stop_spinner(signal):
+#     signal.go = False
+
+# sleep(2)
+
+# signal = Signal()
+# spinner = threading.Thread(target=spin, args=("BUILDING FOLLOWERS...", signal))
+# spinner.start()
+
+
+# try:
+#     while True:
+#         main()
+#         sleep(FREQUENCY * 60)
+# except Exception as e:
+#     # traceback.print_exc()
+#     pass
+# finally:
+#     # stop spinner
+#     stop_spinner(signal)
+#     spinner.join()
 
