@@ -127,9 +127,9 @@ def get_tweet_data(tweet_id):
 
         print(
         f"""
-        Rate limit reached. Sleeping for {rate_limit_reset - time.time() + 5} seconds.
+        Rate limit reached. Sleeping for {rate_limit_reset - time() + 5} seconds.
         """)
-        sleep_time = rate_limit_reset - time.time() + 5
+        sleep_time = rate_limit_reset - time() + 5
         sleep(sleep_time)
 
     if response.status_code == 200:
@@ -192,7 +192,8 @@ def update_old_tweets():
                 cursor.execute(query, values)
                 db.commit()
                 # print(f"Tweet ID: {tweet_id} updated with value {updated_value}")
-        sleep(0.25)
+            sleep(1)
+        sleep(30)
 
 
 
@@ -327,52 +328,52 @@ def main():
             print(f"Error: {response.status_code} - {response.text}")
         # print("Main function completed")
 
-# while True:
-#     try:
-#         main()
-#         sleep(SEARCH_FREQUENCY * 60)
-#     except Exception as e:
-#         traceback.print_exc()
-#         pass
-#     finally:
-#         pass
-
-class Signal:
-    go = True
-
-
-def spin(msg, signal):
-    write, flush = sys.stdout.write, sys.stdout.flush
-    for char in itertools.cycle('|/-\\'):
-        status = char + ' ' + msg
-        write(status)
-        flush()
-        write('\b' * len(status))
-        sleep(.25)
-        if not signal.go:
-            break
-    write(' ' * len(status) + '\b' * len(status))
-
-
-def stop_spinner(signal):
-    signal.go = False
-
-sleep(2)
-
-signal = Signal()
-spinner = threading.Thread(target=spin, args=("TWEET SEARCHER RUNNING...", signal))
-spinner.start()
-
-
-try:
-    while True:
+while True:
+    try:
         main()
         sleep(SEARCH_FREQUENCY * 60)
-except Exception as e:
-    traceback.print_exc()
-    pass
-finally:
-    # stop spinner
-    stop_spinner(signal)
-    spinner.join()
+    except Exception as e:
+        traceback.print_exc()
+        pass
+    finally:
+        pass
+
+# class Signal:
+#     go = True
+
+
+# def spin(msg, signal):
+#     write, flush = sys.stdout.write, sys.stdout.flush
+#     for char in itertools.cycle('|/-\\'):
+#         status = char + ' ' + msg
+#         write(status)
+#         flush()
+#         write('\b' * len(status))
+#         sleep(.25)
+#         if not signal.go:
+#             break
+#     write(' ' * len(status) + '\b' * len(status))
+
+
+# def stop_spinner(signal):
+#     signal.go = False
+
+# sleep(2)
+
+# signal = Signal()
+# spinner = threading.Thread(target=spin, args=("TWEET SEARCHER RUNNING...", signal))
+# spinner.start()
+
+
+# try:
+#     while True:
+#         main()
+#         sleep(SEARCH_FREQUENCY * 60)
+# except Exception as e:
+#     traceback.print_exc()
+#     pass
+# finally:
+#     # stop spinner
+#     stop_spinner(signal)
+#     spinner.join()
 
