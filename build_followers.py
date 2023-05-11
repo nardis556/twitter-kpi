@@ -57,7 +57,7 @@ def get_all_followers(last_pagination_token):
                 if response.status_code == 429:
                     # print(int(response.headers.get('x-rate-limit-remaining', 0)))
                     # print(int(response.headers.get('x-rate-limit-reset', 0)))
-#                     print("rate limited")
+                    print("rate limited")
                     rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
                     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
                     if rate_limit_remaining == 0:
@@ -92,7 +92,7 @@ def get_user_follower_count():
                 if response.status_code == 429:
                     # print(int(response.headers.get('x-rate-limit-remaining', 0)))
                     # print(int(response.headers.get('x-rate-limit-reset', 0)))
-                    # print('rate limited')
+                    print('rate limited')
                     rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
                     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
                     if rate_limit_remaining == 0:
@@ -128,9 +128,10 @@ def save_follower_info(follower, user_followers_count, pagination_token):
                                       follower['public_metrics']['listed_count'], user_followers_count, pagination_token))
         db.commit()
 
+count = 0
 
 def main():
-    count = 0
+    global count
     print(count++1)
     last_pagination_token = get_last_pagination_token()
     all_followers, next_pagination_token = get_all_followers(last_pagination_token)
