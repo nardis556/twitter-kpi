@@ -1,107 +1,119 @@
-CREATE TABLE `daily_summary_mentions` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_original_daily (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `daily_summary_original` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_original_weekly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `daily_summary_reply` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_original_monthly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `daily_summary_retweet` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_retweet_daily (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `weekly_summary_mentions` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_retweet_weekly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `weekly_summary_original` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_retweet_monthly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `weekly_summary_reply` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_reply_daily (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `weekly_summary_retweet` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_reply_weekly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `monthly_summary_mentions` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_reply_monthly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `monthly_summary_original` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_mentions_daily (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `monthly_summary_reply` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_mentions_weekly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
 
-CREATE TABLE `monthly_summary_retweet` (
-  `date` date NOT NULL,
-  `likes` decimal(32,0) DEFAULT NULL,
-  `retweets` decimal(32,0) DEFAULT NULL,
-  `replies` decimal(32,0) DEFAULT NULL,
-  `quotes` decimal(32,0) DEFAULT NULL,
-  `impressions` decimal(32,0) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS summary_mentions_monthly (
+    date DATE NOT NULL,
+    likes INT DEFAULT 0,
+    retweets INT DEFAULT 0,
+    replies INT DEFAULT 0,
+    quotes INT DEFAULT 0,
+    impressions INT DEFAULT 0,
+    PRIMARY KEY(date)
+);
