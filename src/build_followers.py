@@ -55,6 +55,7 @@ def get_all_followers(last_pagination_token):
     while True:
         try:
             response = requests.get(url, headers=headers, params=params)
+            # print(response)
             if response.status_code != 200:
                 # print(f"Request returned an error: {response.status_code}, {response.text}")
                 if response.status_code == 429:
@@ -89,6 +90,7 @@ def get_user_follower_count():
     while True:
         try:
             response = requests.get(url, headers=headers, params=params)
+            # print(response)
             if response.status_code == 200:
                 return response.json()['data']['public_metrics']['followers_count']
             else:
@@ -174,7 +176,7 @@ def stop_spinner(signal):
 sleep(2)
 
 signal = Signal()
-spinner = threading.Thread(target=spin, args=("TWEET SEARCHER RUNNING...", signal))
+spinner = threading.Thread(target=spin, args=("BUILDING FOLLOWERS...", signal))
 spinner.start()
 
 
