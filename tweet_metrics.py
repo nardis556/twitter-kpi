@@ -14,7 +14,6 @@ BEARER_TOKEN = config.BEARER_TOKEN
 
 QUERY = config.QUERY
 SEARCH_FROM_QUERY = f'from:{QUERY}'
-
 SEARCH_MENTIONS_QUERY = f'(@{QUERY} OR #{QUERY})'
 
 
@@ -54,7 +53,7 @@ db = mysql.connector.connect(
 
 
 cursor = db.cursor()
-
+print(cursor)
 
 print(
     f'''
@@ -97,15 +96,15 @@ latest_tweet = {f'from_{QUERY}': None, f'!{QUERY}': None}
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-def is_tweet_in_db(tweet_id, message, query_type):
+def is_tweet_in_db(tweet_id, query_type):
     # print(f"Executing is_tweet_in_db() for tweet_id {tweet_id}")
 
     if tweet_id == latest_tweet[query_type]:
         # print(f"Tweet ID {tweet_id} found in the latest_tweet for query_type {query_type}")
         return (tweet_id,)
 
-    query = "SELECT tweet_id, message FROM twitter WHERE tweet_id = %s OR message = %s"
-    cursor.execute(query, (tweet_id, message))
+    query = "SELECT tweet_id FROM twitter WHERE tweet_id = %s"
+    cursor.execute(query, (tweet_id,))
     result = cursor.fetchone()
     # print(f"is_tweet_in_db() executed successfully for tweet_id {tweet_id}")
 
@@ -115,24 +114,69 @@ def is_tweet_in_db(tweet_id, message, query_type):
     return result if result else None
 
 
+def get_tweet_data(tweet_id):
+    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id}"
+    params = {
+        'tweet.fields': 'public_metrics,created_at',
+    }
+    response = requests.get(tweet_url, headers=headers, params=params)
+    
+    rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
+    rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
+    if rate_limit_remaining == 0:
+
+        print(
+        f"""
+        Rate limit reached. Sleeping for {rate_limit_reset - time.time() + 5} seconds.
+        """)
+        sleep_time = rate_limit_reset - time.time() + 5
+        sleep(sleep_time)
+
+    if response.status_code == 200:
+        data = response.json()
+        if 'data' in data:
+            return data['data']['public_metrics']
+        else:
+            return None
+    else:
+        error_data = response.json()
+        if 'errors' in error_data and ('resource-not-found' in error_data['errors'][0]['type'] or 'not-authorized-for-resource' in error_data['errors'][0]['type']):
+            return -1
+        else:
+            return None
+
+
+
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def update_old_tweets():
-    # print("Executing update_old_tweets()")
     now = datetime.datetime.now()
     update_intervals = config.SEARCH_UPDATE_INTERVAL
     for start_hours, end_hours, updated_value in update_intervals:
         start_time = now - datetime.timedelta(hours=end_hours)
         end_time = now - datetime.timedelta(hours=start_hours)
+        
+        # Select tweets that are within the interval and not updated yet (updated = 0) or updated < updated_value
+        # Exclude tweets that are marked as deleted or suspended (updated = -1)
         query = '''
-        SELECT tweet_id FROM twitter
-        WHERE updated < %s AND timestamp > %s AND timestamp < %s AND (updated_time < %s OR updated_time IS NULL)
+        SELECT tweet_id, timestamp FROM twitter
+        WHERE updated >= 0 AND updated < %s AND timestamp > %s AND timestamp < %s
         '''
         cursor.execute(
-            query, (updated_value, start_time, end_time, start_time))
-        old_tweet_ids = cursor.fetchall()
-        for (tweet_id,) in old_tweet_ids:
+            query, (updated_value, start_time, end_time))
+        old_tweets = cursor.fetchall()
+
+        for tweet_id, tweet_timestamp in old_tweets:
             tweet_data = get_tweet_data(tweet_id)
-            if tweet_data:
+            if tweet_data == -1:
+                query = '''
+                UPDATE twitter SET updated = -1
+                WHERE tweet_id = %s
+                '''
+                values = (tweet_id,)
+                cursor.execute(query, values)
+                db.commit()
+                print(f"Tweet ID: {tweet_id} marked as deleted or suspended.")
+            elif tweet_data:
                 query = '''
                 UPDATE twitter SET likes = %s, retweets = %s, replies = %s, quotes = %s, impressions = %s, updated = %s, updated_time = %s
                 WHERE tweet_id = %s
@@ -148,36 +192,10 @@ def update_old_tweets():
                 cursor.execute(query, values)
                 db.commit()
                 # print(f"Tweet ID: {tweet_id} updated with value {updated_value}")
+        sleep(0.25)
 
-    # print("update_old_tweets() executed successfully")
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-def get_tweet_data(tweet_id):
-    # print(f"Executing get_tweet_data() for tweet_id {tweet_id}")
-    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id}"
-    params = {
-        'tweet.fields': 'public_metrics,created_at',
-    }
-    response = requests.get(tweet_url, headers=headers, params=params)
-    
-    if response.status_code == 200:
-        rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
-        rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
-        if rate_limit_remaining == 0:
-            sleep_time = rate_limit_reset - time() + 5  # adding a buffer of 5 seconds
-            sleep(sleep_time)
-        
-        data = response.json()
-        if 'data' in data:
-            # print(f"get_tweet_data() executed successfully for tweet_id {tweet_id}")
-            return data['data']['public_metrics']
-        else:
-            # print(f"No 'data' field in response for tweet_id {tweet_id}")
-            return None
-    else:
-        # print(f"Error fetching tweet data: {response.status_code} - {response.text}")
-        return None
 
 
 def main():
@@ -202,6 +220,10 @@ def main():
             rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
             rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
             if rate_limit_remaining == 0:
+                print(
+                    f"""
+                    Rate limit reached. Sleeping for {rate_limit_reset - time.time() + 5} seconds.
+                    """)
                 sleep_time = rate_limit_reset - time.time() + 5  # adding a buffer of 5 seconds
                 sleep(sleep_time)
             # print("Recent tweets received")
@@ -254,18 +276,12 @@ def main():
                         tweet_type = 'retweet'
                     elif text.startswith('@'):
                         tweet_type = 'reply'
-                    ### this line includes quote tweets (us quoting tweet to someone as a reply instead of original)
-                    ### since quote tweets gets included in the users main profile and gets a lot of metrics from there, unlike normal replies which has its own column
-                    ### uncomment if want to set queried author as a "reply"
-                    
                     # elif quoted_id and tweet_author == QUERY:
                     #     tweet_type = 'reply'
-                    
-                    
                     else:
                         tweet_type = 'original'
                     existing_tweet = is_tweet_in_db(
-                        tweet_id, text, f'from_{QUERY}' if query_type == f'from:{QUERY}' else f'!{QUERY}')
+                        tweet_id, f'from_{QUERY}' if query_type == f'from:{QUERY}' else f'!{QUERY}')
                     if not existing_tweet:
                         metrics = tweet['public_metrics']
                         query = '''
@@ -292,22 +308,34 @@ def main():
                         db.commit()
                         # print(f"Tweet ID: {tweet_id} added as {tweet_type}")
                         sleep(0.05)
+                    # else:
+                    #     if existing_tweet[0] != tweet_id:
+                    #         query = '''
+                    #         UPDATE twitter SET dupli_message = 1
+                    #         WHERE tweet_id = %s
+                    #         '''
+                    #         cursor.execute(query, (existing_tweet[0],))
+                    #         db.commit()
+                    #         # print(f"Tweet with duplicate message found, tweet ID: {existing_tweet[0]} updated")
                     else:
-                        if existing_tweet[0] != tweet_id:
-                            query = '''
-                            UPDATE twitter SET dupli_message = 1
-                            WHERE tweet_id = %s
-                            '''
-                            cursor.execute(query, (existing_tweet[0],))
-                            db.commit()
-                            # print(f"Tweet with duplicate message found, tweet ID: {existing_tweet[0]} updated")
-            else:
-                print("No new tweets found")
-            sleep(5)
+                        # print(f"Tweet ID: {tweet_id} already exists")
+                        pass
+            # else:
+            #     print("No new tweets found")
+            # sleep(5)
         else:
             print(f"Error: {response.status_code} - {response.text}")
         # print("Main function completed")
 
+# while True:
+#     try:
+#         main()
+#         sleep(SEARCH_FREQUENCY * 60)
+#     except Exception as e:
+#         traceback.print_exc()
+#         pass
+#     finally:
+#         pass
 
 class Signal:
     go = True
@@ -320,7 +348,7 @@ def spin(msg, signal):
         write(status)
         flush()
         write('\b' * len(status))
-        sleep(.1)
+        sleep(.25)
         if not signal.go:
             break
     write(' ' * len(status) + '\b' * len(status))
