@@ -74,12 +74,10 @@ def update_summaries(interval):
 
 while True:
   try:
-    update_summaries('daily')
-    # time.sleep(60)
-    update_summaries('weekly')
-    # time.sleep(60)
-    update_summaries('monthly')
-    time.sleep(360)
+    update_engagement_summaries('daily')
+    update_engagement_summaries('weekly')
+    update_engagement_summaries('monthly')
+    time.sleep(3600)
   except Exception as e:
     traceback.print_exc()
     pass
