@@ -1,4 +1,5 @@
 scripts/config.py
 scripts/__pycache__/*.pyc
 scripts/test*
+scripts/bak*
 cron/check_scripts.sh
