@@ -213,7 +213,7 @@ def update_old_tweets():
 
 
 def main():
-    # update_old_tweets()
+    update_old_tweets()
     # print("Old tweets updated.")
     for query_type in [SEARCH_FROM_QUERY, SEARCH_MENTIONS_QUERY]:
     # for query_type in [SEARCH_MENTIONS_QUERY, SEARCH_FROM_QUERY]:

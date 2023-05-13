@@ -18,30 +18,15 @@ ADD_QUERY = config.ADD_QUERY
 SEARCH_FROM_QUERY = f'from:{QUERY}'
 
 
-def get_search_mentinos():
-    if ADD_QUERY != '' or not None:
-        return f'(@{QUERY} OR #{QUERY} OR ${ADD_QUERY} OR #{ADD_QUERY})'
-    else:
-        return f'(@{QUERY} OR #{QUERY})'
+tweet_id = "1657028489546014722"
 
-print(get_search_mentinos())
-
+tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id}"
 headers = {
     'Authorization': f'Bearer {BEARER_TOKEN}',
 }
-
-
-params = {  # param for new tweet
-    'query': SEARCH_FROM_QUERY,
+params = {
     'tweet.fields': 'public_metrics,created_at',
-    'expansions': 'author_id,in_reply_to_user_id,referenced_tweets.id',
-    'user.fields': 'username',
-    'max_results': 100,
-    'start_time': '2023-05-12T17:00:00.000Z'
 }
+response = requests.get(tweet_url, headers=headers, params=params)
 
-
-url = 'https://api.twitter.com/2/tweets/search/recent'
-
-response = requests.get(url, headers=headers, params=params)
 print(response.json())
