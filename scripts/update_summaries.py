@@ -75,9 +75,9 @@ def update_summaries(interval):
 while True:
   try:
     update_summaries('daily')
-    # time.sleep(60)
+    time.sleep(5)
     update_summaries('weekly')
-    # time.sleep(60)
+    time.sleep(5)
     update_summaries('monthly')
     time.sleep(config.SQL_QUERY_FREQUENCY * 60)
   except Exception as e:
