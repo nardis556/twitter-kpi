@@ -13,12 +13,24 @@ import sys
 BEARER_TOKEN = config.BEARER_TOKEN
 
 QUERY = config.QUERY
-SEARCH_FROM_QUERY = f'from:{QUERY}'
-SEARCH_MENTIONS_QUERY = f'(@{QUERY} OR #{QUERY})'
+ADD_QUERY = config.ADD_QUERY
+# ADD_QUERY = ''
 
+SEARCH_FROM_QUERY = f'from:{QUERY}'
+
+
+def get_search_mentinos():
+    if ADD_QUERY != '' or not None:
+        return f'(@{QUERY} OR #{QUERY} OR {ADD_QUERY})' # OR ${ADD_QUERY}'
+    else:
+        return f'(@{QUERY} OR #{QUERY})'
+
+
+SEARCH_MENTIONS_QUERY = get_search_mentinos()
 
 
 SEARCH_FREQUENCY = config.SEARCH_TWEETS_FREQUENCY
+
 
 
 headers = {
@@ -53,24 +65,24 @@ db = mysql.connector.connect(
 
 
 cursor = db.cursor()
-print(cursor)
+# print(cursor)
 
-print(
-    f'''
+# print(
+#     f'''
 
-    STARTING TWEET SEARCHER
+#     STARTING TWEET SEARCHER
     
-    ## CONFIG
+#     ## CONFIG
 
-    MYSQL_HOST:         {MYSQL_HOST}
-    MYSQL_USER:         {MYSQL_USER}
-    MYSQL_DATABASE:     {MYSQL_DATABASE}
+#     MYSQL_HOST:         {MYSQL_HOST}
+#     MYSQL_USER:         {MYSQL_USER}
+#     MYSQL_DATABASE:     {MYSQL_DATABASE}
 
-    Cooldown:           {SEARCH_FREQUENCY} minutes
+#     Cooldown:           {SEARCH_FREQUENCY} minutes
 
 
-    '''
-)
+#     '''
+# )
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
@@ -82,6 +94,7 @@ def get_last_tweet_timestamp(author=None):
     elif author == f'!{QUERY}':
         query = f"SELECT MAX(timestamp) FROM twitter WHERE author != '{QUERY}'"
         # print(query)
+        # print('not author')
     else:
         query = "SELECT MAX(timestamp) FROM twitter"
         # print(query)
@@ -97,25 +110,23 @@ latest_tweet = {f'from_{QUERY}': None, f'!{QUERY}': None}
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def is_tweet_in_db(tweet_id, query_type):
-    # print(f"Executing is_tweet_in_db() for tweet_id {tweet_id}")
-
     if tweet_id == latest_tweet[query_type]:
-        # print(f"Tweet ID {tweet_id} found in the latest_tweet for query_type {query_type}")
         return (tweet_id,)
 
     query = "SELECT tweet_id FROM twitter WHERE tweet_id = %s"
     cursor.execute(query, (tweet_id,))
     result = cursor.fetchone()
-    # print(f"is_tweet_in_db() executed successfully for tweet_id {tweet_id}")
+
+    # print(f'tweet id in db {tweet_id}')
 
     if result:
         latest_tweet[query_type] = tweet_id
 
     return result if result else None
 
-
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def get_tweet_data(tweet_id):
-    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id}"
+    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id.replace('ID:', '')}"
     params = {
         'tweet.fields': 'public_metrics,created_at',
     }
@@ -125,10 +136,11 @@ def get_tweet_data(tweet_id):
     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
     if rate_limit_remaining == 0:
 
-        print(
-        f"""
-        Rate limit reached. Sleeping for {rate_limit_reset - time() + 5} seconds.
-        """)
+        # print(
+        # f"""
+        # Rate limit reached. Sleeping for {rate_limit_reset - time() + 5} seconds.
+        # """)
+
         sleep_time = rate_limit_reset - time() + 5
         sleep(sleep_time)
 
@@ -144,6 +156,7 @@ def get_tweet_data(tweet_id):
             return -1
         else:
             return None
+
 
 
 
@@ -175,7 +188,7 @@ def update_old_tweets():
                 values = (tweet_id,)
                 cursor.execute(query, values)
                 db.commit()
-                print(f"Tweet ID: {tweet_id} marked as deleted or suspended.")
+                # print(f"Tweet ID: {tweet_id} marked as deleted or suspended.")
             elif tweet_data:
                 query = '''
                 UPDATE twitter SET likes = %s, retweets = %s, replies = %s, quotes = %s, impressions = %s, updated = %s, updated_time = %s
@@ -189,20 +202,22 @@ def update_old_tweets():
                     now,
                     tweet_id
                 )
+
+                # print(values)
+
                 cursor.execute(query, values)
                 db.commit()
                 # print(f"Tweet ID: {tweet_id} updated with value {updated_value}")
-            sleep(1)
+            sleep(0.5)
         sleep(30)
 
 
-
-
-
 def main():
-    update_old_tweets()
+    # update_old_tweets()
     # print("Old tweets updated.")
     for query_type in [SEARCH_FROM_QUERY, SEARCH_MENTIONS_QUERY]:
+    # for query_type in [SEARCH_MENTIONS_QUERY, SEARCH_FROM_QUERY]:
+        # print(query_type)
         # print("Getting last tweet timestamp...")
         if query_type == f'from:{QUERY}':
             last_tweet_timestamp = get_last_tweet_timestamp(f'{QUERY}')
@@ -214,17 +229,19 @@ def main():
                 '%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         else:
             params['start_time'] = '2023-05-02T18:00:00.000Z'
+        # print(last_tweet_timestamp)
         # print(f"Requesting recent tweets with query: {query_type}")
         params['query'] = query_type
         response = requests.get(url, headers=headers, params=params)
+        # print(response.json())
         if response.status_code == 200:
             rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
             rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
             if rate_limit_remaining == 0:
-                print(
-                    f"""
-                    Rate limit reached. Sleeping for {rate_limit_reset - time.time() + 5} seconds.
-                    """)
+                # print(
+                #     f"""
+                #     Rate limit reached. Sleeping for {rate_limit_reset - time.time() + 5} seconds.
+                #     """)
                 sleep_time = rate_limit_reset - time.time() + 5  # adding a buffer of 5 seconds
                 sleep(sleep_time)
             # print("Recent tweets received")
@@ -234,7 +251,7 @@ def main():
                 users = {user['id']: user['username']
                          for user in data['includes']['users']}
                 for tweet in tweets:
-                    tweet_id = tweet['id']
+                    tweet_id = 'ID:' + tweet['id']
                     text = tweet['text']
                     tweet_author = users[tweet['author_id']]
                     tweet_timestamp = datetime.datetime.fromisoformat(
@@ -269,10 +286,12 @@ def main():
                     quotes = metrics['quote_count']
                     impressions = metrics['impression_count']
                     if query_type == SEARCH_MENTIONS_QUERY:
+                        tweet_type = 'mentions'
                         if text.startswith('RT @'):
                             continue
-                        elif f'@{QUERY}' in text or f'#{QUERY}' in text:
+                        elif f'@{QUERY}' in text or f'#{QUERY}' in text or f'{ADD_QUERY}' in text: #or f'${ADD_QUERY}' in text:
                             tweet_type = 'mentions'
+                            # print('tagged mentions # $')
                     elif text.startswith('RT @'):
                         tweet_type = 'retweet'
                     elif text.startswith('@'):
@@ -291,7 +310,7 @@ def main():
                         '''
                         values = (
                             tweet_id, 
-                            tweet_type, 
+                            tweet_type,
                             tweet_author, 
                             text,
                             likes, 
@@ -324,9 +343,10 @@ def main():
             # else:
             #     print("No new tweets found")
             # sleep(5)
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
+        # else:
+            # print(f"Error: {response.status_code} - {response.text}")
         # print("Main function completed")
+        sleep(1)
 
 while True:
     try:

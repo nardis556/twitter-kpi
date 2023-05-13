@@ -68,7 +68,7 @@ while True:
     update_user_engagement_summaries('daily')
     update_user_engagement_summaries('weekly')
     update_user_engagement_summaries('monthly')
-    time.sleep(360)
+    time.sleep(config.SQL_QUERY_FREQUENCY * 60)
   except Exception as e:
     traceback.print_exc()
     pass

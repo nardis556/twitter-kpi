@@ -1,6 +1,8 @@
 #!/bin/bash
 
-CONTAINER_NAMES=("sql-phpmyadmin-1" "sql-db-1")
+sleep 10
+
+CONTAINER_NAMES=("mysqlc" "phpc")
 
 for CONTAINER_NAME in "${CONTAINER_NAMES[@]}"
 do

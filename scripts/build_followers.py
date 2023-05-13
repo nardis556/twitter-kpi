@@ -81,35 +81,42 @@ def get_all_followers(last_pagination_token):
     return all_followers, params.get('pagination_token', None)
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-def get_user_follower_count():
-    # print('get_user_follower_count')
-    url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}"
-    headers, params = prepare_request_data()
-    
-    while True:
-        try:
-            response = requests.get(url, headers=headers, params=params)
-            # print(response)
-            if response.status_code == 200:
-                return response.json()['data']['public_metrics']['followers_count']
-            else:
-                if response.status_code == 429:
-                    # print(int(response.headers.get('x-rate-limit-remaining', 0)))
-                    # print(int(response.headers.get('x-rate-limit-reset', 0)))
-                    # print('rate limited')
-                    rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
-                    rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
-                    if rate_limit_remaining == 0:
-                        sleep_time = rate_limit_reset - time() + 5 
-                        sleep(sleep_time)
-                    continue
-                else:
-                    # print(f"Request returned an error: {response.status_code}, {response.text}")
-                    return None
-        except Exception as e:
-            print(f"Exception: {e}")
-            return None
+# @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+# def get_user_follower_count():
+#     # print('get_user_follower_count')
+#     url = f"https://api.twitter.com/2/users/{TWITTER_USER_ID}"
+#     headers, params = prepare_request_data()
+
+#     while True:
+#         try:
+#             response = requests.get(url, headers=headers, params=params)
+#             # print(response)
+#             if response.status_code == 200:
+#                 return response.json()['data']['public_metrics']['followers_count']
+#             else:
+#                 if response.status_code == 429:
+#                     # print(int(response.headers.get('x-rate-limit-remaining', 0)))
+#                     # print(int(response.headers.get('x-rate-limit-reset', 0)))
+#                     # print('rate limited')
+#                     rate_limit_remaining = int(response.headers.get('x-rate-limit-remaining', 0))
+#                     rate_limit_reset = int(response.headers.get('x-rate-limit-reset', 0))
+#                     if rate_limit_remaining == 0:
+#                         sleep_time = rate_limit_reset - time() + 5 
+#                         sleep(sleep_time)
+#                     continue
+#                 else:
+#                     # print(f"Request returned an error: {response.status_code}, {response.text}")
+#                     return get_last_known_user_followers_count()
+#         except Exception as e:
+#             print(f"Exception: {e}")
+#             return get_last_known_user_followers_count()
+
+
+# def get_last_known_user_followers_count():
+#     cursor.execute("SELECT user_followers_count FROM followers ORDER BY timestamp DESC LIMIT 1")
+#     result = cursor.fetchone()
+#     return result[0] if result else None
+
 
 
 def get_last_pagination_token():
@@ -119,30 +126,29 @@ def get_last_pagination_token():
     return result[0] if result else None
 
 
-def save_follower_info(follower, user_followers_count, pagination_token):
+def save_follower_info(follower, pagination_token):
     now = datetime.now()
     select_query = "SELECT 1 FROM followers WHERE twitter_id = %s"
     cursor.execute(select_query, (follower['id'],))
     if cursor.fetchone() is None:
         insert_query = """
-        INSERT INTO followers (timestamp, twitter_id, username, followers_count, following_count, tweet_count, listed_count, user_followers_count, pagination_token)
+        INSERT INTO followers (timestamp, twitter_id, username, followers_count, following_count, tweet_count, listed_count, pagination_token)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query, (now, follower['id'], follower['username'], follower['public_metrics']['followers_count'],
                                       follower['public_metrics']['following_count'], follower['public_metrics']['tweet_count'],
-                                      follower['public_metrics']['listed_count'], user_followers_count, pagination_token))
+                                      follower['public_metrics']['listed_count'], pagination_token))
         db.commit()
 
-count = 0
+# count = 0
 
 def main():
     global count
-    print(count++1)
+    # print(count++1)
     last_pagination_token = get_last_pagination_token()
     all_followers, next_pagination_token = get_all_followers(last_pagination_token)
-    user_followers_count = get_user_follower_count()
     for follower in all_followers:
-        save_follower_info(follower, user_followers_count, next_pagination_token)
+        save_follower_info(follower, next_pagination_token)
 
 
 while True:
