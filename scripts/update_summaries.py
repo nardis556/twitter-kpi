@@ -45,7 +45,7 @@ def update_summaries(interval):
             start_date = start_of_month(start_date)
             group_by_clause = "DATE_FORMAT(timestamp, '%Y-%m-01')"
 
-        print(tweet_type, start_date, end_date)
+        # print(tweet_type, start_date, end_date)
 
         query = f"""
             INSERT INTO summary_{tweet_type}_{interval} (date, likes, retweets, replies, quotes, impressions)

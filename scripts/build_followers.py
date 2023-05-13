@@ -76,8 +76,8 @@ def get_all_followers(last_pagination_token):
                 break
             params['pagination_token'] = json_response['meta']['next_token']
         except Exception as e:
-            print(f"Exception: {e}")
-            break
+            # print(f"Exception: {e}")
+            pass
     return all_followers, params.get('pagination_token', None)
 
 

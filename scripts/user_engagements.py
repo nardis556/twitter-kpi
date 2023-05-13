@@ -44,7 +44,7 @@ def update_user_engagement_summaries(interval):
         start_date = start_of_month(start_date)
         group_by_clause = "DATE_FORMAT(timestamp, '%Y-%m-01')"
 
-    print(start_date, end_date)
+    # print(start_date, end_date)
 
     query = f"""
         INSERT INTO user_{interval}_engagements (username, date, engagements)
