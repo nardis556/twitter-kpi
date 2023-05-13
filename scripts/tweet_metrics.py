@@ -126,7 +126,7 @@ def is_tweet_in_db(tweet_id, query_type):
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def get_tweet_data(tweet_id):
-    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id.replace('ID:', '')}"
+    tweet_url = f"https://api.twitter.com/2/tweets/{tweet_id}"
     params = {
         'tweet.fields': 'public_metrics,created_at',
     }
@@ -251,7 +251,7 @@ def main():
                 users = {user['id']: user['username']
                          for user in data['includes']['users']}
                 for tweet in tweets:
-                    tweet_id = 'ID:' + tweet['id']
+                    tweet_id = tweet['id']
                     text = tweet['text']
                     tweet_author = users[tweet['author_id']]
                     tweet_timestamp = datetime.datetime.fromisoformat(

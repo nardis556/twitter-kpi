@@ -13,7 +13,7 @@ import sys
 BEARER_TOKEN = config.BEARER_TOKEN
 
 QUERY = config.QUERY
-ADD_QUERY = 'idex'
+ADD_QUERY = config.ADD_QUERY
 
 SEARCH_FROM_QUERY = f'from:{QUERY}'
 
