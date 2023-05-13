@@ -1,4 +1,4 @@
 mysql-connector-python
-dateutil
+python-dateutil
 tenacity
 requests
