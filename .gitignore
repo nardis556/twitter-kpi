@@ -1,4 +1,3 @@
 scripts/config.py
-cron/check_containers.sh
-cron/check_remote.sh
-cron/check_scripts.sh
+cron/*sh
+__pycache__/*
