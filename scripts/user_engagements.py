@@ -32,8 +32,10 @@ def update_user_engagement_summaries(interval):
         cursor.execute(f"SELECT MIN(timestamp) FROM twitter")
         start_date = cursor.fetchone()[0]
     else:
-        start_date = start_date + relativedelta(days=1)
-
+        if (datetime.now().date() - start_date).days < 7:
+            start_date = datetime.now().date() - timedelta(days=7)
+        else:
+            start_date = start_date + relativedelta(days=1)
     end_date = datetime.now()
     if interval == 'daily':
         group_by_clause = "DATE(timestamp)"
@@ -43,9 +45,6 @@ def update_user_engagement_summaries(interval):
     elif interval == 'monthly':
         start_date = start_of_month(start_date)
         group_by_clause = "DATE_FORMAT(timestamp, '%Y-%m-01')"
-
-    # print(start_date, end_date)
-
     query = f"""
         INSERT INTO user_{interval}_engagements (username, date, engagements)
         SELECT 

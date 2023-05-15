@@ -396,4 +396,3 @@ while True:
 #     # stop spinner
 #     stop_spinner(signal)
 #     spinner.join()
-

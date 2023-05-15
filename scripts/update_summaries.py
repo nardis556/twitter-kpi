@@ -33,8 +33,10 @@ def update_summaries(interval):
             cursor.execute(f"SELECT MIN(timestamp) FROM twitter WHERE tweet_type = '{tweet_type}'")
             start_date = cursor.fetchone()[0]
         else:
-            start_date = start_date + relativedelta(days=1)
-
+            if (datetime.now().date() - start_date).days < 7:
+                start_date = datetime.now().date() - timedelta(days=7)
+            else:
+                start_date = start_date + relativedelta(days=1)
         end_date = datetime.now()
         if interval == 'daily':
             group_by_clause = "DATE(timestamp)"

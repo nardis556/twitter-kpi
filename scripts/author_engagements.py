@@ -33,10 +33,12 @@ def update_engagement_summaries(interval):
             cursor.execute(f"SELECT MIN(DATE(timestamp)) FROM twitter WHERE tweet_type = '{tweet_type}'")
             start_date = cursor.fetchone()[0]
         else:
-            start_date = start_date + relativedelta(days=1)
+            if (datetime.now().date() - start_date).days < 7:
+                start_date = datetime.now().date() - timedelta(days=7)
+            else:
+                start_date = start_date + relativedelta(days=1)
 
-        start_date = datetime.combine(start_date, time.min)  # Start from 00:00
-
+        start_date = datetime.combine(start_date, time.min)
         end_date = datetime.now()
         if interval == 'daily':
             group_by_clause = "DATE(timestamp)"
