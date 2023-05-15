@@ -144,6 +144,8 @@ def get_tweet_data(tweet_id):
         sleep_time = rate_limit_reset - time() + 5
         sleep(sleep_time)
 
+        response = requests.get(tweet_url, headers=headers, params=params)
+
     if response.status_code == 200:
         data = response.json()
         if 'data' in data:
