@@ -74,14 +74,9 @@ def update_summaries(interval):
         cursor.execute(query)
         db.commit()
 
-while True:
-  try:
-    update_summaries('daily')
-    time.sleep(5)
-    update_summaries('weekly')
-    time.sleep(5)
-    update_summaries('monthly')
-    time.sleep(config.SQL_QUERY_FREQUENCY * 60)
-  except Exception as e:
-    traceback.print_exc()
-    pass
+
+update_summaries('daily')
+time.sleep(5)
+update_summaries('weekly')
+time.sleep(5)
+update_summaries('monthly')

@@ -65,10 +65,4 @@ def main():
             print(f"Exception: {e}")
             return None
 
-while True:
-    try:
-        main()
-        sleep(config.SQL_QUERY_FREQUENCY * 60)
-    except Exception as e:
-        print(f"Exception: {e}")
-        pass
+main()

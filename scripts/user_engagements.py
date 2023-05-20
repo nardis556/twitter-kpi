@@ -62,14 +62,9 @@ def update_user_engagement_summaries(interval):
     cursor.execute(query)
     db.commit()
 
-while True:
-  try:
-    update_user_engagement_summaries('daily')
-    time.sleep(5)
-    update_user_engagement_summaries('weekly')
-    time.sleep(5)
-    update_user_engagement_summaries('monthly')
-    time.sleep(config.SQL_QUERY_FREQUENCY * 60)
-  except Exception as e:
-    traceback.print_exc()
-    pass
+
+update_user_engagement_summaries('daily')
+time.sleep(5)
+update_user_engagement_summaries('weekly')
+time.sleep(5)
+update_user_engagement_summaries('monthly')

@@ -69,14 +69,8 @@ def update_engagement_summaries(interval):
         db.commit()
 
 
-while True:
-  try:
-    update_engagement_summaries('daily')
-    sleep(5)
-    update_engagement_summaries('weekly')
-    sleep(5)
-    update_engagement_summaries('monthly')
-    sleep(config.SQL_QUERY_FREQUENCY * 60)
-  except Exception as e:
-    traceback.print_exc()
-    pass
+update_engagement_summaries('daily')
+sleep(5)
+update_engagement_summaries('weekly')
+sleep(5)
+update_engagement_summaries('monthly')
